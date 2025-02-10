@@ -91,7 +91,16 @@ namespace p_server
             }
             catch (Exception ex)
             {
-                UpdateLog($"Cliente desconectado: {ex.Message}");
+                // Verificar si el cliente se desconectó
+                if (ex is IOException || ex is SocketException)
+                {
+                    UpdateLog($"Cliente desconectado: {client.Client.RemoteEndPoint}");
+                }
+                else
+                {
+                    UpdateLog($"Error: {ex.Message}");
+                }
+
                 connectedClients.Remove(client);
                 client.Close();
             }
