@@ -173,11 +173,13 @@ namespace p_server
 
         private void btnStartServer_Click(object sender, EventArgs e)
         {
-            if (!isServerRunning)
+           
+            if (!isServerRunning) 
             {
                 serverThread = new Thread(new ThreadStart(StartServer));
                 serverThread.IsBackground = true;
                 serverThread.Start();
+                btnStartServer.BackColor = Color.DarkSlateGray;
                 btnStartServer.Text = "Detener Servidor";
                 label1.Text = "Detener Servidor";
                 isServerRunning = true;
@@ -186,19 +188,38 @@ namespace p_server
             else
             {
                 StopServer();
+                btnStartServer.BackColor = Color.Orange;
                 btnStartServer.Text = "Iniciar Servidor";
                 label1.Text = "Iniciar Servidor";
                 isServerRunning = false;
+            
+
             }
+            alternarColor = !alternarColor;
         }
 
 
-        private void button1_Click(object sender, EventArgs e)
+              private void button1_Click(object sender, EventArgs e)
+        {
+           
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
         {
 
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void listClients_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
         {
 
         }
