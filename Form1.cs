@@ -195,7 +195,6 @@ namespace p_server
             
 
             }
-            alternarColor = !alternarColor;
         }
 
 
