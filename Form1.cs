@@ -55,6 +55,10 @@ namespace p_server
         private void StopServer()
         {
             isServerRunning = false;
+
+            // Guardar el log antes de detener el servidor
+            SaveLogToFile();
+
             server.Stop();
             foreach (TcpClient client in connectedClients)
             {
@@ -63,6 +67,26 @@ namespace p_server
             connectedClients.Clear();
             UpdateLog("Servidor detenido.");
         }
+
+        private void SaveLogToFile()
+        {
+            try
+            {
+                string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+                Directory.CreateDirectory(logDirectory); // Crear la carpeta si no existe
+
+                string logFileName = $"log_{DateTime.Now:yyyyMMdd_HHmmss}.log";
+                string logFilePath = Path.Combine(logDirectory, logFileName);
+
+                File.WriteAllText(logFilePath, txtLog.Text); // Guardar el contenido del txtLog en el archivo
+                UpdateLog($"Log guardado en: {logFilePath}");
+            }
+            catch (Exception ex)
+            {
+                UpdateLog($"Error al guardar el log: {ex.Message}");
+            }
+        }
+
 
         private void HandleClient(TcpClient client)
         {
