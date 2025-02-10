@@ -242,9 +242,25 @@ namespace p_server
 
         }
 
-        private void button1_Click_1(object sender, EventArgs e)
+        private void btnOpenLogs_Click(object sender, EventArgs e)
         {
+            try
+            {
+                string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
 
+                if (Directory.Exists(logDirectory))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", logDirectory);
+                }
+                else
+                {
+                    MessageBox.Show("La carpeta de logs no existe aún.", "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir la carpeta: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
