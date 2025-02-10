@@ -32,6 +32,7 @@
             this.txtLog = new System.Windows.Forms.RichTextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.btnStartServer = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // listClients
@@ -70,11 +71,21 @@
             this.btnStartServer.UseVisualStyleBackColor = true;
             this.btnStartServer.Click += new System.EventHandler(this.btnStartServer_Click);
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(469, 56);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(27, 13);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "hola";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(841, 360);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.btnStartServer);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtLog);
@@ -93,6 +104,7 @@
         private System.Windows.Forms.RichTextBox txtLog;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnStartServer;
+        private System.Windows.Forms.Label label2;
     }
 }
 
