@@ -35,15 +35,28 @@ namespace p_server
                 IPAddress ip = IPAddress.Parse("127.0.0.1");
                 server = new TcpListener(ip, 5000);
                 server.Start();
+                isServerRunning = true;
 
                 while (isServerRunning)
                 {
-                    TcpClient client = server.AcceptTcpClient();
-                    connectedClients.Add(client);
-                    UpdateClientList(client.Client.RemoteEndPoint.ToString());
+                    if (server.Pending()) // Solo aceptar si hay clientes esperando
+                    {
+                        TcpClient client = server.AcceptTcpClient();
+                        string clientInfo = client.Client.RemoteEndPoint.ToString();
 
-                    Thread clientThread = new Thread(() => HandleClient(client));
-                    clientThread.Start();
+                        lock (lockObject)
+                        {
+                            connectedClients.Add(client);
+                            UpdateClientList(clientInfo);
+                        }
+
+                        Thread clientThread = new Thread(() => HandleClient(client));
+                        clientThread.Start();
+                    }
+                    else
+                    {
+                        Thread.Sleep(100); // Pequeña pausa para evitar alto consumo de CPU
+                    }
                 }
             }
             catch (Exception ex)
@@ -52,19 +65,45 @@ namespace p_server
             }
         }
 
+
+
         private void StopServer()
         {
             isServerRunning = false;
 
-            // Guardar el log antes de detener el servidor
-            SaveLogToFile();
-
-            server.Stop();
-            foreach (TcpClient client in connectedClients)
+            // Detener el servidor primero para evitar nuevas conexiones
+            if (server != null)
             {
-                client.Close();
+                server.Stop();
             }
-            connectedClients.Clear();
+
+            // Cerrar todos los clientes de forma segura
+            lock (lockObject)
+            {
+                foreach (TcpClient client in connectedClients.ToList()) // Usar ToList para evitar modificaciones durante la iteración
+                {
+                    try
+                    {
+                        if (client.Connected)
+                        {
+                            client.Close();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        UpdateLog($"Error al cerrar cliente: {ex.Message}");
+                    }
+                }
+                connectedClients.Clear();
+            }
+
+            // Esperar a que el hilo del servidor termine
+            if (serverThread != null && serverThread.IsAlive)
+            {
+                serverThread.Join(); // Esperar a que el hilo termine
+            }
+
+            SaveLogToFile();
             UpdateLog("Servidor detenido.");
         }
 
@@ -90,24 +129,23 @@ namespace p_server
 
         private void HandleClient(TcpClient client)
         {
-            NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-
+            string clientInfo = client.Client.RemoteEndPoint.ToString();
             try
             {
-                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+                NetworkStream stream = client.GetStream();
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+
+                while (isServerRunning && (bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
                     string request = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-
-                    // Agregar solicitud a la cola
                     lock (lockObject)
                     {
                         requestQueue.Enqueue(request);
-                        UpdateLog($"Solicitud recibida de {client.Client.RemoteEndPoint}");
+                        UpdateLog($"Solicitud recibida de {clientInfo}");
                     }
 
-                    // Simular procesamiento y enviar respuesta
+                    // Enviar respuesta
                     string response = "SOLICITUD_PROCESADA";
                     byte[] responseData = Encoding.ASCII.GetBytes(response);
                     stream.Write(responseData, 0, responseData.Length);
@@ -115,17 +153,24 @@ namespace p_server
             }
             catch (Exception ex)
             {
-                // Verificar si el cliente se desconectó
                 if (ex is IOException || ex is SocketException)
                 {
-                    UpdateLog($"Cliente desconectado: {client.Client.RemoteEndPoint}");
+                    UpdateLog($"Cliente desconectado: {clientInfo}");
                 }
                 else
                 {
                     UpdateLog($"Error: {ex.Message}");
                 }
-
-                connectedClients.Remove(client);
+            }
+            finally
+            {
+                lock (lockObject)
+                {
+                    if (connectedClients.Contains(client))
+                    {
+                        connectedClients.Remove(client);
+                    }
+                }
                 client.Close();
             }
         }
@@ -197,32 +242,32 @@ namespace p_server
 
         private void btnStartServer_Click(object sender, EventArgs e)
         {
-           
-            if (!isServerRunning) 
+            if (!isServerRunning)
             {
-                serverThread = new Thread(new ThreadStart(StartServer));
-                serverThread.IsBackground = true;
-                serverThread.Start();
-                btnStartServer.BackColor = Color.DarkSlateGray;
-                btnStartServer.Text = "Detener Servidor";
-                label1.Text = "Detener Servidor";
-                isServerRunning = true;
-                UpdateLog("Servidor iniciado en 127.0.0.1:5000");
+                try
+                {
+                    serverThread = new Thread(new ThreadStart(StartServer));
+                    serverThread.IsBackground = true;
+                    serverThread.Start();
+                    btnStartServer.Text = "Detener Servidor";
+                    isServerRunning = true;
+                    UpdateLog("Servidor iniciado en 127.0.0.1:5000");
+                }
+                catch (Exception ex)
+                {
+                    UpdateLog($"Error al iniciar el servidor: {ex.Message}");
+                }
             }
             else
             {
                 StopServer();
-                btnStartServer.BackColor = Color.Orange;
                 btnStartServer.Text = "Iniciar Servidor";
-                label1.Text = "Iniciar Servidor";
                 isServerRunning = false;
-            
-
             }
         }
 
 
-              private void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
            
         }
