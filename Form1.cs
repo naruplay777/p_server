@@ -254,6 +254,7 @@ namespace p_server
                     serverThread.Start();
                     btnStartServer.Text = "Detener Servidor";
                     label5.BackColor = Color.YellowGreen;
+                    label5.ForeColor = Color.Black;
                     label5.Text = "Activo";
 
                     isServerRunning = true;
@@ -267,6 +268,7 @@ namespace p_server
             else
             {
                 label5.Text = "Inactivo";
+                label5.ForeColor = Color.Gainsboro;
                 label5.BackColor = Color.Red;
                 StopServer();
                 btnStartServer.Text = "Iniciar Servidor";
