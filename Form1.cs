@@ -253,6 +253,9 @@ namespace p_server
                     serverThread.IsBackground = true;
                     serverThread.Start();
                     btnStartServer.Text = "Detener Servidor";
+                    label5.BackColor = Color.YellowGreen;
+                    label5.Text = "Activo";
+
                     isServerRunning = true;
                     UpdateLog("Servidor iniciado en 127.0.0.1:5000");
                 }
@@ -263,6 +266,8 @@ namespace p_server
             }
             else
             {
+                label5.Text = "Inactivo";
+                label5.BackColor = Color.Red;
                 StopServer();
                 btnStartServer.Text = "Iniciar Servidor";
                 isServerRunning = false;

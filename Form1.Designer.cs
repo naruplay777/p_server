@@ -32,16 +32,15 @@
             this.txtLog = new System.Windows.Forms.RichTextBox();
             this.btnStartServer = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.label5 = new System.Windows.Forms.Label();
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.label3 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
+            this.panel5 = new System.Windows.Forms.Panel();
+            this.btnOpenLogs = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.btnOpenLogs = new System.Windows.Forms.Button();
-            this.panel4 = new System.Windows.Forms.Panel();
-            this.panel5 = new System.Windows.Forms.Panel();
-            this.label5 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
@@ -91,6 +90,33 @@
             this.panel1.Size = new System.Drawing.Size(841, 56);
             this.panel1.TabIndex = 6;
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.BackColor = System.Drawing.Color.Red;
+            this.label5.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label5.Location = new System.Drawing.Point(127, 24);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(51, 15);
+            this.label5.TabIndex = 12;
+            this.label5.Text = "Inactivo";
+            // 
+            // panel4
+            // 
+            this.panel4.Location = new System.Drawing.Point(545, 56);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(28, 281);
+            this.panel4.TabIndex = 11;
+            // 
+            // panel3
+            // 
+            this.panel3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(60)))), ((int)(((byte)(27)))));
+            this.panel3.Location = new System.Drawing.Point(532, 56);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(40, 406);
+            this.panel3.TabIndex = 9;
+            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -108,7 +134,6 @@
             this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(57)))), ((int)(((byte)(110)))), ((int)(((byte)(60)))));
             this.panel2.Controls.Add(this.panel5);
             this.panel2.Controls.Add(this.btnOpenLogs);
-            this.panel2.Controls.Add(this.label1);
             this.panel2.Controls.Add(this.label4);
             this.panel2.Controls.Add(this.label2);
             this.panel2.Controls.Add(this.btnStartServer);
@@ -120,16 +145,24 @@
             this.panel2.TabIndex = 7;
             this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
             // 
-            // label1
+            // panel5
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.label1.Location = new System.Drawing.Point(135, 23);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(93, 16);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "InfoServidor :";
+            this.panel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(60)))), ((int)(((byte)(27)))));
+            this.panel5.Location = new System.Drawing.Point(545, -4);
+            this.panel5.Name = "panel5";
+            this.panel5.Size = new System.Drawing.Size(41, 410);
+            this.panel5.TabIndex = 11;
+            // 
+            // btnOpenLogs
+            // 
+            this.btnOpenLogs.BackColor = System.Drawing.Color.DarkSeaGreen;
+            this.btnOpenLogs.Location = new System.Drawing.Point(395, 56);
+            this.btnOpenLogs.Name = "btnOpenLogs";
+            this.btnOpenLogs.Size = new System.Drawing.Size(112, 43);
+            this.btnOpenLogs.TabIndex = 10;
+            this.btnOpenLogs.Text = "Abrir Logs";
+            this.btnOpenLogs.UseVisualStyleBackColor = false;
+            this.btnOpenLogs.Click += new System.EventHandler(this.btnOpenLogs_Click);
             // 
             // label4
             // 
@@ -153,52 +186,6 @@
             this.label2.Size = new System.Drawing.Size(81, 16);
             this.label2.TabIndex = 4;
             this.label2.Text = "Conectados";
-            // 
-            // panel3
-            // 
-            this.panel3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(60)))), ((int)(((byte)(27)))));
-            this.panel3.Location = new System.Drawing.Point(532, 56);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(40, 406);
-            this.panel3.TabIndex = 9;
-            // 
-            // btnOpenLogs
-            // 
-            this.btnOpenLogs.BackColor = System.Drawing.Color.DarkSeaGreen;
-            this.btnOpenLogs.Location = new System.Drawing.Point(395, 56);
-            this.btnOpenLogs.Name = "btnOpenLogs";
-            this.btnOpenLogs.Size = new System.Drawing.Size(112, 43);
-            this.btnOpenLogs.TabIndex = 10;
-            this.btnOpenLogs.Text = "Abrir Logs";
-            this.btnOpenLogs.UseVisualStyleBackColor = false;
-            this.btnOpenLogs.Click += new System.EventHandler(this.btnOpenLogs_Click);
-            // 
-            // panel4
-            // 
-            this.panel4.Location = new System.Drawing.Point(545, 56);
-            this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(28, 281);
-            this.panel4.TabIndex = 11;
-            // 
-            // panel5
-            // 
-            this.panel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(60)))), ((int)(((byte)(27)))));
-            this.panel5.Location = new System.Drawing.Point(545, -4);
-            this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(41, 410);
-            this.panel5.TabIndex = 11;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.BackColor = System.Drawing.Color.YellowGreen;
-            this.label5.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label5.Location = new System.Drawing.Point(139, 25);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(42, 15);
-            this.label5.TabIndex = 12;
-            this.label5.Text = "Activo";
             // 
             // Form1
             // 
@@ -231,7 +218,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Panel panel3;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnOpenLogs;
         private System.Windows.Forms.Panel panel4;
         private System.Windows.Forms.Panel panel5;
