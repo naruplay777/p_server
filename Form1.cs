@@ -50,6 +50,9 @@ namespace p_server
                             UpdateClientList(clientInfo);
                         }
 
+                        UpdateLog($"Cliente conectado: {client.Client.RemoteEndPoint}");
+
+
                         Thread clientThread = new Thread(() => HandleClient(client));
                         clientThread.Start();
                     }
