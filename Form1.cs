@@ -68,7 +68,14 @@ namespace p_server
             }
         }
 
-
+        private void ClearClientList()
+        {
+            // Aseguramos que la actualización de la interfaz sea en el hilo principal.
+            Invoke((MethodInvoker)delegate
+            {
+                listClients.Items.Clear(); // Limpiamos todos los clientes de la lista.
+            });
+        }
 
         private void StopServer()
         {
@@ -89,7 +96,7 @@ namespace p_server
                     {
                         if (client.Connected)
                         {
-                            client.Close();
+                            CloseClientSafely(client);
                         }
                     }
                     catch (Exception ex)
@@ -99,6 +106,12 @@ namespace p_server
                 }
                 connectedClients.Clear();
             }
+
+            // Limpiar la lista de clientes conectados en la interfaz de usuario
+            Invoke((MethodInvoker)delegate
+            {
+                listClients.Items.Clear(); // Limpiar todos los elementos de la lista en la interfaz
+            });
 
             // Esperar a que el hilo del servidor termine
             if (serverThread != null && serverThread.IsAlive)
@@ -110,12 +123,21 @@ namespace p_server
             UpdateLog("Servidor detenido.");
         }
 
+
+        private string GetLogDirectory()
+        {
+            string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            Directory.CreateDirectory(logDirectory); // Crea la carpeta si no existe
+            return logDirectory;
+        }
+
+
         private void SaveLogToFile()
         {
             try
             {
-                string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
-                Directory.CreateDirectory(logDirectory); // Crear la carpeta si no existe
+                string logDirectory = GetLogDirectory();
+                // Crear la carpeta si no existe
 
                 string logFileName = $"log_{DateTime.Now:yyyyMMdd_HHmmss}.log";
                 string logFilePath = Path.Combine(logDirectory, logFileName);
@@ -174,9 +196,29 @@ namespace p_server
                         connectedClients.Remove(client);
                     }
                 }
-                client.Close();
+                CloseClientSafely(client);
             }
         }
+
+        private void CloseClientSafely(TcpClient client)
+        {
+            try
+            {
+                if (client.Connected)
+                {
+                    client.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateLog($"Error al cerrar cliente: {ex.Message}");
+            }
+            finally
+            {
+                RemoveClient(client);
+            }
+        }
+
 
         private void timerQuantum_Tick(object sender, EventArgs e)
         {
@@ -184,11 +226,28 @@ namespace p_server
             {
                 lock (lockObject)
                 {
-                    string request = requestQueue.Dequeue();
+                    string request = SafeDequeueRequest();
+                    if (request != null)
+                    {
+                        ProcessRequest(request);
+                    }
                     ProcessRequest(request);
                 }
             }
         }
+
+        private string SafeDequeueRequest()
+        {
+            lock (lockObject)
+            {
+                if (requestQueue.Count > 0)
+                {
+                    return requestQueue.Dequeue();
+                }
+            }
+            return null;
+        }
+
 
         private void ProcessRequest(string request)
         {
@@ -241,6 +300,45 @@ namespace p_server
                 listClients.Items.Add(clientInfo);
             }
         }
+
+        private void RemoveClient(TcpClient client)
+        {
+            lock (lockObject)
+            {
+                if (connectedClients.Contains(client))
+                {
+                    connectedClients.Remove(client);
+                }
+            }
+
+            // Intentamos verificar la conexión de manera segura
+            try
+            {
+                if (client.Connected)
+                {
+                    Invoke((MethodInvoker)delegate
+                    {
+                        // Solo intentamos acceder a RemoteEndPoint si el Socket no ha sido cerrado
+                        if (client.Client != null && client.Client.Connected)
+                        {
+                            string clientInfo = client.Client.RemoteEndPoint.ToString();
+                            if (listClients.Items.Contains(clientInfo))
+                            {
+                                listClients.Items.Remove(clientInfo);
+                            }
+                        }
+                    });
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Manejo de la excepción si el objeto ha sido desechado
+                Console.WriteLine("El cliente ya ha sido desconectado y su socket ha sido desechado.");
+            }
+        }
+
+
+
 
 
         private void btnStartServer_Click(object sender, EventArgs e)
