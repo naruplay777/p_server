@@ -39,13 +39,16 @@
             this.label2 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
             this.btnOpenLogs = new System.Windows.Forms.Button();
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.panel5 = new System.Windows.Forms.Panel();
+            this.label5 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // listClients
             // 
-            this.listClients.BackColor = System.Drawing.SystemColors.Window;
+            this.listClients.BackColor = System.Drawing.Color.PaleGoldenrod;
             this.listClients.FormattingEnabled = true;
             this.listClients.Location = new System.Drawing.Point(12, 51);
             this.listClients.Name = "listClients";
@@ -55,7 +58,7 @@
             // 
             // txtLog
             // 
-            this.txtLog.BackColor = System.Drawing.Color.LemonChiffon;
+            this.txtLog.BackColor = System.Drawing.Color.PaleGoldenrod;
             this.txtLog.Location = new System.Drawing.Point(17, 208);
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
@@ -65,7 +68,7 @@
             // 
             // btnStartServer
             // 
-            this.btnStartServer.BackColor = System.Drawing.Color.DarkSlateGray;
+            this.btnStartServer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(57)))), ((int)(((byte)(46)))));
             this.btnStartServer.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnStartServer.ForeColor = System.Drawing.SystemColors.HighlightText;
             this.btnStartServer.Location = new System.Drawing.Point(9, 123);
@@ -79,6 +82,9 @@
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(60)))), ((int)(((byte)(27)))));
+            this.panel1.Controls.Add(this.label5);
+            this.panel1.Controls.Add(this.panel4);
+            this.panel1.Controls.Add(this.panel3);
             this.panel1.Controls.Add(this.label3);
             this.panel1.Location = new System.Drawing.Point(0, -1);
             this.panel1.Name = "panel1";
@@ -99,23 +105,27 @@
             // 
             // panel2
             // 
-            this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(220)))), ((int)(((byte)(180)))));
+            this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(57)))), ((int)(((byte)(110)))), ((int)(((byte)(60)))));
+            this.panel2.Controls.Add(this.panel5);
+            this.panel2.Controls.Add(this.btnOpenLogs);
             this.panel2.Controls.Add(this.label1);
             this.panel2.Controls.Add(this.label4);
             this.panel2.Controls.Add(this.label2);
             this.panel2.Controls.Add(this.btnStartServer);
             this.panel2.Controls.Add(this.txtLog);
             this.panel2.Controls.Add(this.listClients);
-            this.panel2.Location = new System.Drawing.Point(0, 56);
+            this.panel2.Location = new System.Drawing.Point(0, 55);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(439, 405);
+            this.panel2.Size = new System.Drawing.Size(604, 406);
             this.panel2.TabIndex = 7;
+            this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(135, 32);
+            this.label1.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.label1.Location = new System.Drawing.Point(135, 23);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(93, 16);
             this.label1.TabIndex = 6;
@@ -125,6 +135,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.label4.Location = new System.Drawing.Point(19, 178);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(93, 16);
@@ -135,41 +146,69 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Font = new System.Drawing.Font("Arial", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.label2.Location = new System.Drawing.Point(14, 23);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(75, 15);
+            this.label2.Size = new System.Drawing.Size(81, 16);
             this.label2.TabIndex = 4;
             this.label2.Text = "Conectados";
             // 
             // panel3
             // 
             this.panel3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(60)))), ((int)(((byte)(27)))));
-            this.panel3.Location = new System.Drawing.Point(420, 54);
+            this.panel3.Location = new System.Drawing.Point(532, 56);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(44, 406);
+            this.panel3.Size = new System.Drawing.Size(40, 406);
             this.panel3.TabIndex = 9;
             // 
             // btnOpenLogs
             // 
-            this.btnOpenLogs.Location = new System.Drawing.Point(563, 107);
+            this.btnOpenLogs.BackColor = System.Drawing.Color.DarkSeaGreen;
+            this.btnOpenLogs.Location = new System.Drawing.Point(395, 56);
             this.btnOpenLogs.Name = "btnOpenLogs";
-            this.btnOpenLogs.Size = new System.Drawing.Size(105, 31);
+            this.btnOpenLogs.Size = new System.Drawing.Size(112, 43);
             this.btnOpenLogs.TabIndex = 10;
             this.btnOpenLogs.Text = "Abrir Logs";
-            this.btnOpenLogs.UseVisualStyleBackColor = true;
+            this.btnOpenLogs.UseVisualStyleBackColor = false;
             this.btnOpenLogs.Click += new System.EventHandler(this.btnOpenLogs_Click);
+            // 
+            // panel4
+            // 
+            this.panel4.Location = new System.Drawing.Point(545, 56);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(28, 281);
+            this.panel4.TabIndex = 11;
+            // 
+            // panel5
+            // 
+            this.panel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(4)))), ((int)(((byte)(60)))), ((int)(((byte)(27)))));
+            this.panel5.Location = new System.Drawing.Point(545, -4);
+            this.panel5.Name = "panel5";
+            this.panel5.Size = new System.Drawing.Size(41, 410);
+            this.panel5.TabIndex = 11;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.BackColor = System.Drawing.Color.YellowGreen;
+            this.label5.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.label5.Location = new System.Drawing.Point(139, 25);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(42, 15);
+            this.label5.TabIndex = 12;
+            this.label5.Text = "Activo";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.ClientSize = new System.Drawing.Size(741, 461);
-            this.Controls.Add(this.btnOpenLogs);
-            this.Controls.Add(this.panel3);
+            this.ClientSize = new System.Drawing.Size(586, 461);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "Form1";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -194,6 +233,9 @@
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnOpenLogs;
+        private System.Windows.Forms.Panel panel4;
+        private System.Windows.Forms.Panel panel5;
+        private System.Windows.Forms.Label label5;
     }
 }
 
