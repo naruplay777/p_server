@@ -20,9 +20,15 @@ namespace p_server
         private Thread serverThread;
         private bool isServerRunning = false;
         private List<TcpClient> connectedClients = new List<TcpClient>();
-        private Queue<string> requestQueue = new Queue<string>();
         private object lockObject = new object();
         private Dictionary<TcpClient, string> clientIPs = new Dictionary<TcpClient, string>();
+
+        private int availablePaper = 2;
+        private int availablePrinter = 1;
+
+        private Queue<Request> requestQueue = new Queue<Request>();
+        private Queue<Request> executionQueue = new Queue<Request>();
+        private Queue<Request> readyQueue = new Queue<Request>();
 
         public Form1()
         {
@@ -38,29 +44,37 @@ namespace p_server
                 server.Start();
                 isServerRunning = true;
 
-                while (isServerRunning)
-                {
-                    if (server.Pending()) // Solo aceptar si hay clientes esperando
-                    {
-                        TcpClient client = server.AcceptTcpClient();
-                        AddClient(client); // ✅ Llamamos la nueva función
+                serverThread = new Thread(new ThreadStart(ServerLoop));
+                serverThread.IsBackground = true;
+                serverThread.Start();
 
-                        UpdateLog($"Cliente conectado: {client.Client.RemoteEndPoint}");
-
-                        Thread clientThread = new Thread(() => HandleClient(client));
-                        clientThread.Start();
-                    }
-                    else
-                    {
-                        Thread.Sleep(100); // Pequeña pausa para evitar alto consumo de CPU
-                    }
-                }
+                UpdateLog("Servidor iniciado en 127.0.0.1:5000");
             }
             catch (Exception ex)
             {
                 UpdateLog($"Error: {ex.Message}");
             }
+        }
 
+        private void ServerLoop()
+        {
+            while (isServerRunning)
+            {
+                if (server.Pending()) // Solo aceptar si hay clientes esperando
+                {
+                    TcpClient client = server.AcceptTcpClient();
+                    AddClient(client); // ✅ Llamamos la nueva función
+
+                    UpdateLog($"Cliente conectado: {client.Client.RemoteEndPoint}");
+
+                    Thread clientThread = new Thread(() => HandleClient(client));
+                    clientThread.Start();
+                }
+                else
+                {
+                    Thread.Sleep(100); // Pequeña pausa para evitar alto consumo de CPU
+                }
+            }
         }
 
         private void StopServer()
@@ -109,15 +123,12 @@ namespace p_server
             UpdateLog("Servidor detenido.");
         }
 
-
         private string GetLogDirectory()
         {
             string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
             Directory.CreateDirectory(logDirectory); // Crea la carpeta si no existe
             return logDirectory;
         }
-
-
 
         private void SaveLogToFile()
         {
@@ -138,7 +149,6 @@ namespace p_server
             }
         }
 
-
         private void HandleClient(TcpClient client)
         {
             string clientInfo = client.Client.RemoteEndPoint.ToString();
@@ -152,16 +162,25 @@ namespace p_server
 
                 while (isServerRunning && (bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
-                    string request = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                    string content = Encoding.UTF8.GetString(buffer, 0, bytesRead); // Cambiado a UTF8
+                    var request = new Request
+                    {
+                        ClientInfo = clientInfo,
+                        Content = content,
+                        HasPaper = false,
+                        HasPrinter = false,
+                        QueueNumber = requestQueue.Count + 1 // Asignar número de cola
+                    };
+
                     lock (lockObject)
                     {
                         requestQueue.Enqueue(request);
-                        UpdateLog($"Solicitud recibida de {clientInfo}");
+                        UpdateLog($"Solicitud recibida de {clientInfo} con número de cola {request.QueueNumber}");
                     }
 
                     // Enviar respuesta
                     string response = "SOLICITUD_PROCESADA";
-                    byte[] responseData = Encoding.ASCII.GetBytes(response);
+                    byte[] responseData = Encoding.UTF8.GetBytes(response); // Cambiado a UTF8
                     stream.Write(responseData, 0, responseData.Length);
                 }
             }
@@ -227,23 +246,95 @@ namespace p_server
             }
         }
 
-        private void timerQuantum_Tick(object sender, EventArgs e)
+        private bool DetectDeadlock()
         {
-            if (requestQueue.Count > 0)
+            if (!isServerRunning)
             {
-                lock (lockObject)
+                return false;
+            }
+
+            lock (lockObject)
+            {
+                bool deadlockDetected = true;
+
+                foreach (var request in requestQueue)
                 {
-                    string request = SafeDequeueRequest();
-                    if (request != null)
+                    if (!request.HasPaper || !request.HasPrinter)
                     {
-                        ProcessRequest(request);
+                        deadlockDetected = false;
+                        break;
                     }
-                    ProcessRequest(request);
+                }
+
+                if (deadlockDetected && requestQueue.Count >= 3)
+                {
+                    UpdateLog("Interbloqueo detectado.");
+                }
+
+                return deadlockDetected && requestQueue.Count >= 3;
+            }
+        }
+
+
+
+        private void ResolveDeadlock()
+        {
+            lock (lockObject)
+            {
+                UpdateLog("Resolviendo interbloqueo...");
+
+                // Expropiar recursos
+                foreach (var request in requestQueue)
+                {
+                    if (request.HasPaper)
+                    {
+                        request.HasPaper = false;
+                        availablePaper++;
+                        UpdateLog($"Recurso papel expropiado. Hojas disponibles: {availablePaper}");
+                    }
+
+                    if (request.HasPrinter)
+                    {
+                        request.HasPrinter = false;
+                        availablePrinter++;
+                        UpdateLog($"Recurso impresora expropiado. Impresoras disponibles: {availablePrinter}");
+                    }
                 }
             }
         }
 
-        private string SafeDequeueRequest()
+        private void timerQuantum_Tick(object sender, EventArgs e)
+        {
+            if (!isServerRunning)
+            {
+                return;
+            }
+
+            lock (lockObject)
+            {
+                if (executionQueue.Count > 0)
+                {
+                    Request request = executionQueue.Dequeue();
+                    if (request != null)
+                    {
+                        ProcessExecution(request);
+                    }
+                }
+                else if (requestQueue.Count >= 3) // Verificar si hay al menos 3 solicitudes en la cola
+                {
+                    Request request = SafeDequeueRequest();
+                    if (request != null)
+                    {
+                        executionQueue.Enqueue(request);
+                        ProcessRequest(request);
+                    }
+                }
+
+                DetectDeadlock();
+            }
+        }
+
+        private Request SafeDequeueRequest()
         {
             lock (lockObject)
             {
@@ -255,22 +346,93 @@ namespace p_server
             return null;
         }
 
-
-       private void ProcessRequest(string request)
+        private void ProcessRequest(Request request)
         {
             // Ejemplo: Analizar el archivo de texto recibido
-            string[] lines = request.Split('\n');
-            string resourceType = lines[0]; // Primera línea: tipo de recurso
-            int linesToPrint = int.Parse(lines[1]); // Segunda línea: cantidad de líneas
+            string[] lines = request.Content.Split('\n');
+            string[] header = lines[0].Split('|');
+            string resourceType = header[0]; // Primera línea: tipo de recurso
+            int linesToPrint = int.Parse(header[1]); // Segunda línea: cantidad de líneas
 
             // Simular impresión (mostrar en RichTextBox)
             Invoke((MethodInvoker)delegate {
-                txtLog.AppendText($"Imprimiendo {linesToPrint} líneas...\n");
+                txtLog.AppendText($"Solicitud de impresión recibida. Líneas a imprimir: {linesToPrint}\n");
             });
 
             // Registrar en archivo log
-            LogToFile($"Operación procesada: {linesToPrint} líneas");
+            LogToFile($"Solicitud de impresión recibida. Líneas a imprimir: {linesToPrint}");
+
+            // Agregar mensaje de log adicional
+            UpdateLog($"Procesando solicitud de cola {request.QueueNumber}: {header[0]}|{header[1]}");
+
+            // Verificar si hay al menos 3 solicitudes en la cola
+            lock (lockObject)
+            {
+                if (requestQueue.Count >= 3)
+                {
+                    executionQueue.Enqueue(request);
+                }
+                else
+                {
+                    UpdateLog($"No hay suficientes solicitudes en la cola para procesar la solicitud de cola {request.QueueNumber}.");
+                }
+            }
         }
+
+
+        private void ProcessExecution(Request request)
+        {
+            // Simular la ejecución de una acción por quantum
+            string[] lines = request.Content.Split('\n');
+            string[] header = lines[0].Split('|');
+            string resourceType = header[0]; // Primera línea: tipo de recurso
+            int linesToPrint = int.Parse(header[1]); // Segunda línea: cantidad de líneas
+
+            // Agregar mensaje de log adicional
+            UpdateLog($"Ejecutando solicitud de cola {request.QueueNumber}: {header[0]}|{header[1]}");
+
+            // Asignar recursos
+            if (!request.HasPaper && availablePaper > 0)
+            {
+                request.HasPaper = true;
+                availablePaper--;
+                UpdateLog($"Recurso papel asignado a la solicitud de cola {request.QueueNumber}. Hojas disponibles: {availablePaper}");
+            }
+            else if (!request.HasPrinter && availablePrinter > 0)
+            {
+                request.HasPrinter = true;
+                availablePrinter--;
+                UpdateLog($"Recurso impresora asignado a la solicitud de cola {request.QueueNumber}. Impresoras disponibles: {availablePrinter}");
+            }
+            else if (request.HasPaper && request.HasPrinter)
+            {
+                // Imprimir las líneas especificadas
+                for (int i = 1; i <= linesToPrint; i++)
+                {
+                    Invoke((MethodInvoker)delegate {
+                        txtLog.AppendText($"{lines[i]}\n");
+                    });
+                }
+
+                // Liberar los recursos
+                request.HasPaper = false;
+                request.HasPrinter = false;
+                availablePaper++;
+                availablePrinter++;
+                UpdateLog($"Recurso papel liberado por la solicitud de cola {request.QueueNumber}. Hojas disponibles: {availablePaper}");
+                UpdateLog($"Recurso impresora liberado por la solicitud de cola {request.QueueNumber}. Impresoras disponibles: {availablePrinter}");
+
+                // Mover a la cola de listo
+                readyQueue.Enqueue(request);
+            }
+            else
+            {
+                // No se pudo asignar el recurso, volver a la cola de espera
+                requestQueue.Enqueue(request);
+                UpdateLog($"Recurso no disponible para la solicitud de cola {request.QueueNumber}. Solicitud devuelta a la cola de espera.");
+            }
+        }
+
 
 
 
@@ -294,7 +456,6 @@ namespace p_server
                 txtLog.AppendText($"{DateTime.Now:HH:mm:ss} - {message}\n");
             }
         }
-
 
         private void UpdateClientList(string clientInfo)
         {
@@ -356,8 +517,6 @@ namespace p_server
             });
         }
 
-
-
         private void btnStartServer_Click(object sender, EventArgs e)
         {
             if (!isServerRunning)
@@ -391,10 +550,14 @@ namespace p_server
             }
         }
 
+        private void btnUnLock_Click(object sender, EventArgs e)
+        {
+            ResolveDeadlock();
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {
-           
+
         }
 
         private void Form1_Load(object sender, EventArgs e)
