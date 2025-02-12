@@ -22,6 +22,7 @@ namespace p_server
         private List<TcpClient> connectedClients = new List<TcpClient>();
         private Queue<string> requestQueue = new Queue<string>();
         private object lockObject = new object();
+        private Dictionary<TcpClient, string> clientIPs = new Dictionary<TcpClient, string>();
 
         public Form1()
         {
@@ -42,16 +43,9 @@ namespace p_server
                     if (server.Pending()) // Solo aceptar si hay clientes esperando
                     {
                         TcpClient client = server.AcceptTcpClient();
-                        string clientInfo = client.Client.RemoteEndPoint.ToString();
-
-                        lock (lockObject)
-                        {
-                            connectedClients.Add(client);
-                            UpdateClientList(clientInfo);
-                        }
+                        AddClient(client); // ✅ Llamamos la nueva función
 
                         UpdateLog($"Cliente conectado: {client.Client.RemoteEndPoint}");
-
 
                         Thread clientThread = new Thread(() => HandleClient(client));
                         clientThread.Start();
@@ -66,6 +60,7 @@ namespace p_server
             {
                 UpdateLog($"Error: {ex.Message}");
             }
+
         }
 
         private void ClearClientList()
@@ -331,44 +326,33 @@ namespace p_server
 
         private void RemoveClient(TcpClient client)
         {
-            if (client == null || client.Client == null)
+            if (client == null)
                 return;
 
             string clientInfo = "";
 
-            try
-            {
-                clientInfo = client.Client.RemoteEndPoint.ToString();
-            }
-            catch (ObjectDisposedException)
-            {
-                // Si el socket ya está cerrado, intentamos encontrarlo en la lista
-                lock (lockObject)
-                {
-                    foreach (var item in listClients.Items)
-                    {
-                        if (item.ToString().Contains(clientInfo))
-                        {
-                            clientInfo = item.ToString();
-                            break;
-                        }
-                    }
-                }
-            }
-
             lock (lockObject)
             {
-                if (connectedClients.Contains(client))
+                if (clientIPs.ContainsKey(client))
                 {
-                    connectedClients.Remove(client);
+                    clientInfo = clientIPs[client]; // Recuperamos la IP guardada
+                    clientIPs.Remove(client); // Eliminamos del diccionario
                 }
+                connectedClients.Remove(client);
             }
 
-            // 🔥 Forzar actualización en la UI
+            // 🔥 Verificar si la IP existe en el ListBox antes de eliminar
             Invoke((MethodInvoker)delegate
             {
-                listClients.Items.Remove(clientInfo);
-                UpdateLog($"Cliente eliminado: {clientInfo}");
+                if (listClients.Items.Contains(clientInfo))
+                {
+                    listClients.Items.Remove(clientInfo);
+                    UpdateLog($"Cliente eliminado correctamente: {clientInfo}");
+                }
+                else
+                {
+                    UpdateLog($"Error: No se encontró {clientInfo} en listClients.");
+                }
             });
         }
 
@@ -376,8 +360,21 @@ namespace p_server
 
 
 
+        private void AddClient(TcpClient client)
+        {
+            string clientInfo = client.Client.RemoteEndPoint.ToString();
 
+            lock (lockObject)
+            {
+                connectedClients.Add(client);
+                clientIPs[client] = clientInfo; // Guardamos la IP del cliente
+            }
 
+            Invoke((MethodInvoker)delegate
+            {
+                listClients.Items.Add(clientInfo);
+            });
+        }
 
 
 
