@@ -132,6 +132,7 @@ namespace p_server
         }
 
 
+
         private void SaveLogToFile()
         {
             try
@@ -155,9 +156,11 @@ namespace p_server
         private void HandleClient(TcpClient client)
         {
             string clientInfo = client.Client.RemoteEndPoint.ToString();
+            NetworkStream stream = null;
+
             try
             {
-                NetworkStream stream = client.GetStream();
+                stream = client.GetStream();
                 byte[] buffer = new byte[1024];
                 int bytesRead;
 
@@ -189,6 +192,19 @@ namespace p_server
             }
             finally
             {
+                // Aseguramos que la conexión y el stream se cierren correctamente
+                if (stream != null)
+                {
+                    try
+                    {
+                        stream.Close(); // Cerrar el NetworkStream
+                    }
+                    catch (Exception ex)
+                    {
+                        UpdateLog($"Error al cerrar NetworkStream: {ex.Message}");
+                    }
+                }
+
                 lock (lockObject)
                 {
                     if (connectedClients.Contains(client))
@@ -196,28 +212,39 @@ namespace p_server
                         connectedClients.Remove(client);
                     }
                 }
+
                 CloseClientSafely(client);
             }
         }
 
+
         private void CloseClientSafely(TcpClient client)
         {
+            if (client == null)
+                return;
+
             try
             {
                 if (client.Connected)
                 {
-                    client.Close();
+                    client.GetStream().Close();
                 }
+                client.Close();
             }
             catch (Exception ex)
             {
-                UpdateLog($"Error al cerrar cliente: {ex.Message}");
+                UpdateLog($"Error cerrando cliente: {ex.Message}");
             }
             finally
             {
                 RemoveClient(client);
             }
         }
+
+
+
+
+
 
 
         private void timerQuantum_Tick(object sender, EventArgs e)
@@ -247,6 +274,7 @@ namespace p_server
             }
             return null;
         }
+
 
 
         private void ProcessRequest(string request)
@@ -303,6 +331,31 @@ namespace p_server
 
         private void RemoveClient(TcpClient client)
         {
+            if (client == null || client.Client == null)
+                return;
+
+            string clientInfo = "";
+
+            try
+            {
+                clientInfo = client.Client.RemoteEndPoint.ToString();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Si el socket ya está cerrado, intentamos encontrarlo en la lista
+                lock (lockObject)
+                {
+                    foreach (var item in listClients.Items)
+                    {
+                        if (item.ToString().Contains(clientInfo))
+                        {
+                            clientInfo = item.ToString();
+                            break;
+                        }
+                    }
+                }
+            }
+
             lock (lockObject)
             {
                 if (connectedClients.Contains(client))
@@ -311,31 +364,18 @@ namespace p_server
                 }
             }
 
-            // Intentamos verificar la conexión de manera segura
-            try
+            // 🔥 Forzar actualización en la UI
+            Invoke((MethodInvoker)delegate
             {
-                if (client.Connected)
-                {
-                    Invoke((MethodInvoker)delegate
-                    {
-                        // Solo intentamos acceder a RemoteEndPoint si el Socket no ha sido cerrado
-                        if (client.Client != null && client.Client.Connected)
-                        {
-                            string clientInfo = client.Client.RemoteEndPoint.ToString();
-                            if (listClients.Items.Contains(clientInfo))
-                            {
-                                listClients.Items.Remove(clientInfo);
-                            }
-                        }
-                    });
-                }
-            }
-            catch (ObjectDisposedException)
-            {
-                // Manejo de la excepción si el objeto ha sido desechado
-                Console.WriteLine("El cliente ya ha sido desconectado y su socket ha sido desechado.");
-            }
+                listClients.Items.Remove(clientInfo);
+                UpdateLog($"Cliente eliminado: {clientInfo}");
+            });
         }
+
+
+
+
+
 
 
 
