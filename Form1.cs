@@ -63,15 +63,6 @@ namespace p_server
 
         }
 
-        private void ClearClientList()
-        {
-            // Aseguramos que la actualización de la interfaz sea en el hilo principal.
-            Invoke((MethodInvoker)delegate
-            {
-                listClients.Items.Clear(); // Limpiamos todos los clientes de la lista.
-            });
-        }
-
         private void StopServer()
         {
             isServerRunning = false;
@@ -236,12 +227,6 @@ namespace p_server
             }
         }
 
-
-
-
-
-
-
         private void timerQuantum_Tick(object sender, EventArgs e)
         {
             if (requestQueue.Count > 0)
@@ -271,8 +256,7 @@ namespace p_server
         }
 
 
-
-        private void ProcessRequest(string request)
+       private void ProcessRequest(string request)
         {
             // Ejemplo: Analizar el archivo de texto recibido
             string[] lines = request.Split('\n');
@@ -355,10 +339,6 @@ namespace p_server
                 }
             });
         }
-
-
-
-
 
         private void AddClient(TcpClient client)
         {
